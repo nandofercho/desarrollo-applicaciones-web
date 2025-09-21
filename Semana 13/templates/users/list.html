@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}usuarios{% endblock %}
+
+{% block content %}
+<h1>Clientes</h1>
+
+<form method="get" action="{{ url_for('listar_usuarios') }}" class="form-inline">
+  <input type="text" name="q" placeholder="Buscar por nombre" value="{{ q or '' }}">
+  <button type="submit" class="btn">Buscar</button>
+  <a class="btn btn-primary" href="{{ url_for('crear_usuario') }}"> Nuevo</a>
+</form>
+
+{% if usuarios %}
+<h1> Ver si ingresa</h1>
+<table class="table">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Nombre</th>
+      <th>Email</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for u in usuarios %}
+    <tr>
+      <td>{{ u.id_usuario }}</td>
+      <td>{{ u.nombre }}</td>
+      <td>{{ u.email }}</td>
+      <td>
+        <a class="btn btn-small" href="{{ url_for('editar_usuario', id=u.id_usuario) }}">Editar</a>
+        <form method="post" action="{{ url_for('eliminar_usuario', id=u.id_usuario) }}" style="display:inline"
+          onsubmit="return confirm('¿Eliminar {{ u.nombre }}?');">
+          <button type="submit" class="btn btn-danger btn-small">Eliminar</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No hay usuarios para mostrar.</p>
+{% endif %}
+{% endblock %}
