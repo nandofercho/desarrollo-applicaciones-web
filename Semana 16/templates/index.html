@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="bg-white shadow rounded-lg p-10 text-center">
+  <img src="{{ url_for('static', filename='favicon.png') }}" 
+       alt="Logo" class="mx-auto h-16 w-16 mb-4">
+  <h1 class="text-4xl font-extrabold text-gray-900 mb-4">
+    Bienvenido al Sistema de Inventario
+  </h1>
+  <p class="text-lg text-gray-600 mb-6">
+    Administra productos, controla existencias y mantén tu inventario al día con facilidad.
+  </p>
+</section>
+
+<!-- Features Section -->
+<section class="mt-12 grid gap-6 md:grid-cols-3">
+  <div class="bg-white shadow rounded-lg p-6 text-center">
+    <h3 class="text-xl font-semibold text-gray-800 mb-2">📦 Productos</h3>
+    <p class="text-gray-600">Gestiona tu catálogo de productos de manera rápida y sencilla.</p>
+  </div>
+  <div class="bg-white shadow rounded-lg p-6 text-center">
+    <h3 class="text-xl font-semibold text-gray-800 mb-2">📊 Inventario</h3>
+    <p class="text-gray-600">Controla existencias y evita pérdidas con reportes claros.</p>
+  </div>
+  <div class="bg-white shadow rounded-lg p-6 text-center">
+    <h3 class="text-xl font-semibold text-gray-800 mb-2">👥 Usuarios</h3>
+    <p class="text-gray-600">Registra usuarios y administra accesos de forma segura.</p>
+  </div>
+</section>
+{% endblock %}

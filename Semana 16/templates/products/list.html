@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Productos{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto bg-white shadow-md rounded-lg p-6">
+  <!-- Encabezado -->
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+      <i class="fas fa-box text-blue-600"></i> Productos
+    </h1>
+    <a href="{{ url_for('crear_producto') }}"
+       class="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition">
+      <i class="fas fa-plus"></i> Nuevo
+    </a>
+  </div>
+
+  <!-- Buscador -->
+  <form method="get" action="{{ url_for('listar_productos') }}" class="flex items-center gap-2 mb-6">
+    <input type="text" name="q" placeholder="Buscar por nombre" value="{{ q or '' }}"
+           class="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:ring focus:ring-blue-300 focus:outline-none">
+    <button type="submit"
+            class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">
+      <i class="fas fa-search"></i> Buscar
+    </button>
+  </form>
+
+  <!-- Tabla de productos -->
+  {% if productos %}
+  <div class="overflow-x-auto">
+    <table class="min-w-full border border-gray-200 rounded-lg">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="px-4 py-2 border-b text-left text-gray-600">ID</th>
+          <th class="px-4 py-2 border-b text-left text-gray-600">Nombre</th>
+          <th class="px-4 py-2 border-b text-left text-gray-600">Cantidad</th>
+          <th class="px-4 py-2 border-b text-left text-gray-600">Precio</th>
+          <th class="px-4 py-2 border-b text-center text-gray-600">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in productos %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-4 py-2 border-b">{{ p.id_producto }}</td>
+          <td class="px-4 py-2 border-b">{{ p.nombre }}</td>
+          <td class="px-4 py-2 border-b">{{ p.cantidad }}</td>
+          <td class="px-4 py-2 border-b">${{ '%.2f'|format(p.precio) }}</td>
+          <td class="px-4 py-2 border-b text-center space-x-2">
+            <!-- Botón Editar -->
+            <a href="{{ url_for('editar_producto', pid=p.id_producto) }}"
+               class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition">
+              <i class="fas fa-edit"></i>
+            </a>
+
+            <!-- Botón Eliminar -->
+            <form method="post" action="{{ url_for('eliminar_producto', pid=p.id_producto) }}" class="inline"
+                  onsubmit="return confirm('¿Eliminar {{ p.nombre }}?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit"
+                      class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-red-600 text-white hover:bg-red-700 transition">
+                <i class="fas fa-trash"></i>
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-gray-500 text-center mt-6">No hay productos para mostrar.</p>
+  {% endif %}
+</div>
+{% endblock %}

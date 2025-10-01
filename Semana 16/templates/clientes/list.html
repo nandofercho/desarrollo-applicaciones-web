@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Clientes{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto bg-white shadow-md rounded-lg p-6">
+    <!-- Encabezado -->
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <i class="fas fa-users text-blue-600"></i> Clientes
+        </h1>
+        <a href="{{ url_for('crear_cliente') }}"
+            class="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition">
+            <i class="fas fa-plus"></i> Nuevo
+        </a>
+    </div>
+
+    <!-- Buscador -->
+    <form method="get" action="{{ url_for('listar_clientes') }}" class="flex items-center gap-2 mb-6">
+        <input type="text" name="q" placeholder="Buscar por nombre, apellido o email" value="{{ q or '' }}"
+            class="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:ring focus:ring-blue-300 focus:outline-none">
+        <button type="submit"
+            class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">
+            <i class="fas fa-search"></i> Buscar
+        </button>
+    </form>
+
+    <!-- Tabla de clientes -->
+    {% if clientes %}
+    <div class="overflow-x-auto">
+        <table class="w-full border-collapse">
+            <thead class="bg-gray-100 text-left">
+                <tr>
+                    <th class="px-4 py-2 border-b">ID</th>
+                    <th class="px-4 py-2 border-b">Nombre</th>
+                    <th class="px-4 py-2 border-b">Apellido</th>
+                    <th class="px-4 py-2 border-b">Correo</th>
+                    <th class="px-4 py-2 border-b">Teléfono</th>
+                    <th class="px-4 py-2 border-b">Dirección</th>
+                    <th class="px-4 py-2 border-b">Registrado</th>
+                    <th class="px-4 py-2 border-b text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in clientes %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-2 border-b">{{ c.id_cliente }}</td>
+                    <td class="px-4 py-2 border-b">{{ c.nombre }}</td>
+                    <td class="px-4 py-2 border-b">{{ c.apellido }}</td>
+                    <td class="px-4 py-2 border-b">{{ c.email }}</td>
+                    <td class="px-4 py-2 border-b">{{ c.telefono or '-' }}</td>
+                    <td class="px-4 py-2 border-b">{{ c.direccion or '-' }}</td>
+                    <td class="px-4 py-2 border-b">{{ c.fecha_registro.strftime('%Y-%m-%d') if c.fecha_registro else ''
+                        }}</td>
+                    <td class="px-4 py-2 border-b text-center space-x-2">
+                        <!-- Botón Editar -->
+                        <a href="{{ url_for('editar_cliente', cid=c.id_cliente) }}"
+                            class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <!-- Botón Eliminar -->
+                        <form method="post" action="{{ url_for('eliminar_cliente', cid=c.id_cliente) }}" class="inline"
+                            onsubmit="return confirm('¿Eliminar {{ c.nombre }} {{ c.apellido }}?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit"
+                                class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-red-600 text-white hover:bg-red-700 transition">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-gray-600">No hay clientes para mostrar.</p>
+    {% endif %}
+</div>
+{% endblock %}

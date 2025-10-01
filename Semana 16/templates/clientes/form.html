@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Nuevo cliente' if modo=='crear' else 'Editar cliente' }}{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow-md rounded-lg p-8 max-w-lg mx-auto">
+  <!-- Título -->
+  <div class="flex items-center gap-3 mb-6">
+    <i class="fas fa-user text-blue-600 text-2xl"></i>
+    <h2 class="text-2xl font-bold text-gray-800">
+      {{ 'Nuevo cliente' if modo=='crear' else 'Editar cliente' }}
+    </h2>
+  </div>
+
+  <!-- Formulario -->
+  <form method="post" novalidate class="space-y-5">
+    {{ form.hidden_tag() }}
+
+    <!-- Nombre -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700">{{ form.nombre.label }}</label>
+      {{ form.nombre(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 
+                             focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+      {% for e in form.nombre.errors %}
+        <small class="text-red-600 text-sm">{{ e }}</small>
+      {% endfor %}
+    </div>
+
+    <!-- Apellido -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700">{{ form.apellido.label }}</label>
+      {{ form.apellido(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 
+                               focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+      {% for e in form.apellido.errors %}
+        <small class="text-red-600 text-sm">{{ e }}</small>
+      {% endfor %}
+    </div>
+
+    <!-- Email -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700">{{ form.email.label }}</label>
+      {{ form.email(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 
+                             focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+      {% for e in form.email.errors %}
+        <small class="text-red-600 text-sm">{{ e }}</small>
+      {% endfor %}
+    </div>
+
+    <!-- Teléfono -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700">{{ form.telefono.label }}</label>
+      {{ form.telefono(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 
+                                focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+      {% for e in form.telefono.errors %}
+        <small class="text-red-600 text-sm">{{ e }}</small>
+      {% endfor %}
+    </div>
+
+    <!-- Dirección -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700">{{ form.direccion.label }}</label>
+      {{ form.direccion(class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 
+                                 focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+      {% for e in form.direccion.errors %}
+        <small class="text-red-600 text-sm">{{ e }}</small>
+      {% endfor %}
+    </div>
+
+    <!-- Botones -->
+    <div class="flex justify-end space-x-3 pt-4">
+      <a href="{{ url_for('listar_clientes') }}"
+         class="inline-flex items-center gap-2 bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 transition">
+        <i class="fas fa-times"></i> Cancelar
+      </a>
+      {{ form.submit(class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition") }}
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}{{ title if title is defined else "Mi sitio Flask" }}{% endblock %}</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  
+  {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-100 text-gray-800 min-h-screen flex flex-col">
+
+  <!-- Header / Navbar -->
+  <header class="bg-gray-800 text-white shadow-md">
+    <nav class="container mx-auto flex justify-between items-center p-4">
+      <!-- Links principales -->
+      <div class="flex space-x-4">
+        <a href="{{ url_for('index') }}" class="hover:underline">Inicio</a>
+        <a href="{{ url_for('about') }}" class="hover:underline">Acerca de</a>
+
+        {% if current_user.is_authenticated %}
+          <a href="{{ url_for('listar_productos') }}" class="hover:text-gray-300 flex items-center gap-1">
+            <i class="fas fa-box"></i> Productos
+          </a>
+          <a href="{{ url_for('listar_clientes') }}" class="hover:text-gray-300 flex items-center gap-1">
+            <i class="fas fa-users"></i> Clientes
+          </a>
+        {% endif %}
+      </div>
+
+      <!-- Usuario / Autenticación -->
+      <div class="flex items-center space-x-4">
+        {% if current_user.is_authenticated %}
+          <span class="text-sm">Hola, {{ current_user.nombre or current_user.email }}</span>
+          <form method="post" action="{{ url_for('logout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="hover:text-gray-300">
+              <i class="fas fa-sign-out-alt"></i> Salir
+            </button>
+          </form>
+        {% else %}
+          <a href="{{ url_for('login') }}" class="hover:underline">Ingresar</a>
+          <a href="{{ url_for('registro') }}" class="hover:underline">Registrarse</a>
+        {% endif %}
+      </div>
+    </nav>
+  </header>
+
+  <!-- Flash messages -->
+  <!--{% with msgs = get_flashed_messages(with_categories=true) %}
+    {% if msgs %}
+      <div class="container mx-auto mt-4 space-y-2">
+        {% for cat, msg in msgs %}
+          <div class="px-4 py-2 rounded 
+                      {% if cat == 'success' %} bg-green-100 text-green-800 border border-green-300
+                      {% elif cat == 'error' %} bg-red-100 text-red-800 border border-red-300
+                      {% else %} bg-gray-100 text-gray-800 border border-gray-300 {% endif %}">
+            {{ msg }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+  -->
+
+  <!-- Flash Toast Notifications -->
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% if msgs %}
+      <div id="toast-container" class="fixed top-5 right-5 space-y-3 z-50">
+        {% for cat, msg in msgs %}
+          <div class="flex items-center max-w-xs w-full p-4 rounded-lg shadow-lg text-sm animate-fade-in-down
+                      {% if cat == 'success' %} bg-green-100 text-green-800 border border-green-300
+                      {% elif cat == 'error' %} bg-red-100 text-red-800 border border-red-300
+                      {% elif cat == 'warning' %} bg-yellow-100 text-yellow-800 border border-yellow-300
+                      {% else %} bg-blue-100 text-blue-800 border border-blue-300 {% endif %}">
+            <!-- Icono -->
+            {% if cat == 'success' %}
+              <span class="mr-2">✅</span>
+            {% elif cat == 'error' %}
+              <span class="mr-2">❌</span>
+            {% elif cat == 'warning' %}
+              <span class="mr-2">⚠️</span>
+            {% else %}
+              <span class="mr-2">ℹ️</span>
+            {% endif %}
+
+            <!-- Mensaje -->
+            <span class="flex-1">{{ msg }}</span>
+
+            <!-- Botón cerrar -->
+            <button onclick="this.parentElement.remove()" 
+                    class="ml-3 text-gray-500 hover:text-gray-800">✖</button>
+          </div>
+        {% endfor %}
+      </div>
+
+      <!-- Script para autocierre -->
+      <script>
+        document.querySelectorAll('#toast-container div').forEach((toast) => {
+          setTimeout(() => {
+            toast.remove();
+          }, 5000); // 5 segundos
+        });
+      </script>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Main content -->
+  <main class="container mx-auto flex-grow px-4 py-6">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-gray-300 text-center py-4 text-xl">
+    <small>© {{ now().year if now is defined else 2025 }} Fernando Zambrano</small>
+  </footer>
+
+  {% block extra_js %}{% endblock %}
+
+  <!-- Animación personalizada -->
+  <style>
+    @keyframes fade-in-down {
+      0% { opacity: 0; transform: translateY(-20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in-down {
+      animation: fade-in-down 0.3s ease-out;
+    }
+  </style>
+</body>
+</html>
