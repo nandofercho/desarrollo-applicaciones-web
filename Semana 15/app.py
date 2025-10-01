@@ -9,7 +9,7 @@ from flask_wtf.csrf import CSRFProtect
 from werkzeug.security import generate_password_hash
 
 from conexion.conexion import conexion, cerrar_conexion
-from forms import ProductoForm
+from forms import ClienteForm, ProductoForm
 from modelos.model_login import Usuario
 
 app = Flask(__name__)
@@ -68,8 +68,6 @@ def login():
 
     return render_template('login.html', title='Iniciar Sesión')
 
-
-
 @app.route('/logout', methods=['POST'])
 @login_required
 def logout():
@@ -111,15 +109,14 @@ def registro():
 
 
 
-# ========================
+# ========================================================================================================================
 #  CONTEXTO / PÁGINAS BASE
-# ========================
+# ========================================================================================================================
 @app.context_processor
 def inject_now():
     return {'now': datetime.utcnow}
 
 @app.route('/')
-@login_required
 def index():
     return render_template('index.html', title='Inicio')
 
@@ -129,7 +126,6 @@ def usuario(nombre):
     return f'Bienvenido, {nombre}!'
 
 @app.route('/about/')
-@login_required
 def about():
     return render_template('about.html', title='Acerca de')
 
@@ -150,9 +146,9 @@ def test_db():
         cerrar_conexion(conn)
 
 
-# ========================
+# ========================================================================================================================
 #  PRODUCTOS (CRUD)
-# ========================
+# ========================================================================================================================
 # Listar / Buscar
 @app.route('/productos')
 @login_required
@@ -163,11 +159,11 @@ def listar_productos():
     try:
         if q:
             cur.execute(
-                "SELECT id, nombre, cantidad, precio FROM productos WHERE nombre LIKE %s",
+                "SELECT id_producto, nombre, cantidad, precio FROM productos WHERE nombre LIKE %s",
                 (f"%{q}%",)
             )
         else:
-            cur.execute("SELECT id, nombre, cantidad, precio FROM productos")
+            cur.execute("SELECT id_producto, nombre, cantidad, precio FROM productos")
         productos = cur.fetchall()
         return render_template('products/list.html', title='Productos', productos=productos, q=q)
     finally:
@@ -205,7 +201,7 @@ def editar_producto(pid):
     conn = conexion()
     cur = conn.cursor(dictionary=True)
     try:
-        cur.execute("SELECT id, nombre, cantidad, precio FROM productos WHERE id = %s", (pid,))
+        cur.execute("SELECT id_producto, nombre, cantidad, precio FROM productos WHERE id_producto = %s", (pid,))
         prod = cur.fetchone()
         if not prod:
             flash('Producto no encontrado.', 'warning')
@@ -220,7 +216,7 @@ def editar_producto(pid):
             cur2 = conn.cursor()
             try:
                 cur2.execute(
-                    "UPDATE productos SET nombre=%s, cantidad=%s, precio=%s WHERE id=%s",
+                    "UPDATE productos SET nombre=%s, cantidad=%s, precio=%s WHERE id_producto=%s",
                     (nombre, cantidad, precio, pid)
                 )
                 conn.commit()
@@ -244,7 +240,7 @@ def eliminar_producto(pid):
     conn = conexion()
     cur = conn.cursor()
     try:
-        cur.execute("DELETE FROM productos WHERE id = %s", (pid,))
+        cur.execute("DELETE FROM productos WHERE id_producto = %s", (pid,))
         if cur.rowcount > 0:
             conn.commit()
             flash('Producto eliminado correctamente.', 'success')
@@ -255,6 +251,129 @@ def eliminar_producto(pid):
         cur.close()
         cerrar_conexion(conn)
 
+# ========================================================================================================================
+#  CLIENTES (CRUD)
+# ========================================================================================================================
+
+# Listar / Buscar
+@app.route('/clientes')
+@login_required
+def listar_clientes():
+    q = request.args.get('q', '').strip()
+    conn = conexion()
+    cur = conn.cursor(dictionary=True)
+    try:
+        if q:
+            cur.execute(
+                "SELECT id_cliente, nombre, apellido, email, telefono, direccion, fecha_registro "
+                "FROM clientes WHERE nombre LIKE %s OR apellido LIKE %s OR email LIKE %s",
+                (f"%{q}%", f"%{q}%", f"%{q}%")
+            )
+        else:
+            cur.execute("SELECT id_cliente, nombre, apellido, email, telefono, direccion, fecha_registro FROM clientes")
+        clientes = cur.fetchall()
+        return render_template('clientes/list.html', title='Clientes', clientes=clientes, q=q)
+    finally:
+        cur.close()
+        cerrar_conexion(conn)
+
+
+# Crear
+@app.route('/clientes/nuevo', methods=['GET', 'POST'])
+@login_required
+def crear_cliente():
+    form = ClienteForm()
+    if form.validate_on_submit():
+        conn = conexion()
+        cur = conn.cursor()
+        try:
+            cur.execute(
+                "INSERT INTO clientes (nombre, apellido, email, telefono, direccion) VALUES (%s, %s, %s, %s, %s)",
+                (form.nombre.data.strip(),
+                 form.apellido.data.strip(),
+                 form.email.data.strip(),
+                 form.telefono.data.strip() if form.telefono.data else None,
+                 form.direccion.data.strip() if form.direccion.data else None)
+            )
+            conn.commit()
+            flash('Cliente agregado correctamente.', 'success')
+            return redirect(url_for('listar_clientes'))
+        except Exception as e:
+            conn.rollback()
+            form.nombre.errors.append('No se pudo guardar: ' + str(e))
+        finally:
+            cur.close()
+            cerrar_conexion(conn)
+    return render_template('clientes/form.html', title='Nuevo cliente', form=form, modo='crear')
+
+
+# Editar
+@app.route('/clientes/<int:cid>/editar', methods=['GET', 'POST'])
+@login_required
+def editar_cliente(cid):
+    conn = conexion()
+    cur = conn.cursor(dictionary=True)
+    try:
+        cur.execute("SELECT * FROM clientes WHERE id_cliente = %s", (cid,))
+        cli = cur.fetchone()
+        if not cli:
+            flash('Cliente no encontrado.', 'warning')
+            return redirect(url_for('listar_clientes'))
+
+        form = ClienteForm(data={
+            'nombre': cli['nombre'],
+            'apellido': cli['apellido'],
+            'email': cli['email'],
+            'telefono': cli['telefono'],
+            'direccion': cli['direccion']
+        })
+
+        if form.validate_on_submit():
+            conn2 = conexion()
+            cur2 = conn2.cursor()
+            try:
+                cur2.execute(
+                    "UPDATE clientes SET nombre=%s, apellido=%s, email=%s, telefono=%s, direccion=%s WHERE id_cliente=%s",
+                    (form.nombre.data.strip(),
+                     form.apellido.data.strip(),
+                     form.email.data.strip(),
+                     form.telefono.data.strip() if form.telefono.data else None,
+                     form.direccion.data.strip() if form.direccion.data else None,
+                     cid)
+                )
+                conn2.commit()
+                flash('Cliente actualizado correctamente.', 'success')
+                return redirect(url_for('listar_clientes'))
+            except Exception as e:
+                conn2.rollback()
+                form.nombre.errors.append('Error al actualizar: ' + str(e))
+            finally:
+                cur2.close()
+                cerrar_conexion(conn2)
+
+        return render_template('clientes/form.html', title='Editar cliente', form=form, modo='editar', cid=cid)
+    finally:
+        cur.close()
+        cerrar_conexion(conn)
+
+
+# Eliminar
+@app.route('/clientes/<int:cid>/eliminar', methods=['POST'])
+@login_required
+def eliminar_cliente(cid):
+    conn = conexion()
+    cur = conn.cursor()
+    try:
+        cur.execute("DELETE FROM clientes WHERE id_cliente = %s", (cid,))
+        if cur.rowcount > 0:
+            conn.commit()
+            flash('Cliente eliminado correctamente.', 'success')
+        else:
+            flash('Cliente no encontrado.', 'warning')
+        return redirect(url_for('listar_clientes'))
+    finally:
+        cur.close()
+        cerrar_conexion(conn)
 
 # ========================
 #  MAIN

@@ -2,7 +2,7 @@ from models import db, Producto
 
 class Inventario:
     """
-    - Usa un diccionario {id: Producto} para accesos O(1).
+    - Usa un diccionario {id_producto: Producto} para accesos O(1).
     - Mantiene un set con nombres en minúsculas para validar duplicados rápidamente.
     - Devuelve listas ordenadas usando list/tuplas según convenga.
     """
@@ -13,7 +13,7 @@ class Inventario:
     @classmethod
     def cargar_desde_bd(cls):
         productos = Producto.query.all()              # -> list[Producto]
-        productos_dict = {p.id: p for p in productos} # dict por id
+        productos_dict = {p.id_producto: p for p in productos} # dict por id_producto
         return cls(productos_dict)
 
     # --- CRUD ---
@@ -23,22 +23,22 @@ class Inventario:
         p = Producto(nombre=nombre.strip(), cantidad=int(cantidad), precio=float(precio))
         db.session.add(p)
         db.session.commit()
-        self.productos[p.id] = p
+        self.productos[p.id_producto] = p
         self.nombres.add(p.nombre.lower())
         return p
 
-    def eliminar(self, id: int) -> bool:
-        p = self.productos.get(id) or Producto.query.get(id)
+    def eliminar(self, id_producto: int) -> bool:
+        p = self.productos.get(id_producto) or Producto.query.get(id_producto)
         if not p:
             return False
         db.session.delete(p)
         db.session.commit()
-        self.productos.pop(id, None)
+        self.productos.pop(id_producto, None)
         self.nombres.discard(p.nombre.lower())
         return True
 
-    def actualizar(self, id: int, nombre=None, cantidad=None, precio=None) -> Producto | None:
-        p = self.productos.get(id) or Producto.query.get(id)
+    def actualizar(self, id_producto: int, nombre=None, cantidad=None, precio=None) -> Producto | None:
+        p = self.productos.get(id_producto) or Producto.query.get(id_producto)
         if not p:
             return None
         if nombre is not None:
@@ -53,7 +53,7 @@ class Inventario:
         if precio is not None:
             p.precio = float(precio)
         db.session.commit()
-        self.productos[p.id] = p
+        self.productos[p.id_producto] = p
         return p
 
     # --- Consultas con colecciones ---

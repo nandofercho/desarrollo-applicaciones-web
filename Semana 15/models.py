@@ -4,7 +4,7 @@ db = SQLAlchemy()
 
 class Producto(db.Model):
     __tablename__ = 'productos'
-    id = db.Column(db.Integer, primary_key=True)
+    id_producto = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(120), unique=True, nullable=False)
     cantidad = db.Column(db.Integer, nullable=False, default=0)
     precio = db.Column(db.Float, nullable=False, default=0.0)  # para demo
@@ -14,4 +14,4 @@ class Producto(db.Model):
 
     def to_tuple(self):
         # ejemplo de tupla: (id, nombre, cantidad, precio)
-        return (self.id, self.nombre, self.cantidad, self.precio)
+        return (self.id_producto, self.nombre, self.cantidad, self.precio)

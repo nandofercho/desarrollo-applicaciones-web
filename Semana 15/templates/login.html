@@ -2,27 +2,61 @@
 {% block title %}Iniciar Sesión{% endblock %}
 
 {% block content %}
-<section class="auth">
-  <h2>Iniciar Sesión</h2>
+<div class="flex flex-col lg:flex-row w-full" style="height: 760px;">
 
-  <form method="post" class="form auth-form">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  
-    <div class="form-row">
-      <label for="email">Correo electrónico</label>
-      <input id="email" type="email" name="email" required
-             value="{{ request.form.email or '' }}" autocomplete="username" />
-    </div>
+  <!-- Columna izquierda: Formulario -->
+  <div class="flex-1 flex items-center justify-center bg-white px-8">
+    <div class="max-w-md w-full space-y-6">
+      <!-- Título -->
+      <div>
+        <img src="{{ url_for('static', filename='favicon.png') }}" class="h-12 w-12 mb-4" alt="Logo">
+        <h2 class="text-3xl font-extrabold text-gray-900">Iniciar Sesión</h2>
+        <p class="mt-2 text-sm text-gray-600">Ingresa tus credenciales para acceder</p>
+      </div>
 
-    <div class="form-row">
-      <label for="password">Contraseña</label>
-      <input id="password" type="password" name="password" required autocomplete="current-password" />
-    </div>
+      <!-- Formulario -->
+      <form method="post" class="space-y-4">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-    <div class="form-actions">
-      <button type="submit" class="btn">Iniciar sesión</button>
-      <a class="btn-link" href="{{ url_for('registro') }}">Crear cuenta</a>
+        <!-- Email -->
+        <div>
+          <label for="email" class="block text-sm font-medium text-gray-700">Correo electrónico</label>
+          <input id="email" type="email" name="email" required value="{{ request.form.email or '' }}"
+            autocomplete="username" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 
+                        focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-700">Contraseña</label>
+          <input id="password" type="password" name="password" required autocomplete="current-password" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 
+                        focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+        </div>
+
+        <!-- Acciones -->
+        <div class="flex items-center justify-between mt-6">
+          <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-md shadow-sm hover:bg-blue-700 
+                         focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            Iniciar sesión
+          </button>
+          <a href="{{ url_for('registro') }}" class="text-blue-600 hover:underline text-sm">
+            Crear cuenta
+          </a>
+        </div>
+      </form>
     </div>
-  </form>
-</section>
+  </div>
+
+  <!-- Columna derecha: Branding -->
+  <div class="hidden lg:flex flex-1 bg-blue-700 text-white items-center justify-center">
+    <div class="text-center space-y-4 px-6">
+      <img src="https://www.uea.edu.ec/web/v2/wp-content/uploads/2023/02/logopng-1-246x246.png" class="mx-auto "
+        alt="Logo">
+      <h2 class="text-5xl font-bold">UEA</h2>
+      <p class="text-3xl opacity-80">Universidad Estatal Amazónica</p>
+      <hr class="my-4 border-gray-300">
+      <p class="text-3xl opacity-80">Fernando Zambrano</p>
+    </div>
+  </div>
+</div>
 {% endblock %}
