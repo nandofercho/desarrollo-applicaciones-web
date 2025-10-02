@@ -375,6 +375,139 @@ def eliminar_cliente(cid):
         cur.close()
         cerrar_conexion(conn)
 
+# Listar facturas
+@app.route('/facturas')
+@login_required
+def listar_facturas():
+    conn = conexion()
+    cur = conn.cursor(dictionary=True)
+    try:
+        cur.execute("""
+            SELECT f.id_factura, f.fecha, f.subtotal, f.iva, f.total, f.estado,
+                   c.nombre, c.apellido
+            FROM facturas f
+            JOIN clientes c ON f.id_cliente = c.id_cliente
+            ORDER BY f.fecha DESC
+        """)
+        facturas = cur.fetchall()
+        return render_template('facturas/list.html', facturas=facturas)
+    finally:
+        cur.close()
+        cerrar_conexion(conn)
+
+
+# Crear factura
+@app.route('/facturas/nueva', methods=['GET', 'POST'])
+@login_required
+def crear_factura():
+    conn = conexion()
+    cur = conn.cursor(dictionary=True)
+
+    if request.method == 'POST':
+        id_cliente = request.form['id_cliente']
+        productos = request.form.getlist('productos[]')
+        cantidades = request.form.getlist('cantidades[]')
+
+        try:
+            # Calcular totales
+            subtotal = 0
+            detalle = []
+            for pid, cant in zip(productos, cantidades):
+                cur.execute("SELECT precio FROM productos WHERE id_producto=%s", (pid,))
+                prod = cur.fetchone()
+                precio = float(prod['precio'])
+                cantidad = int(cant)
+                st = precio * cantidad
+                subtotal += st
+                detalle.append((pid, cantidad, precio, st))
+
+            iva = subtotal * 0.12
+            total = subtotal + iva
+
+            # Insertar factura
+            cur.execute("INSERT INTO facturas (id_cliente, subtotal, iva, total, estado) VALUES (%s,%s,%s,%s,%s)",
+                        (id_cliente, subtotal, iva, total, 'PAGADA'))
+            id_factura = cur.lastrowid
+
+            # Insertar detalle
+            for pid, cantidad, precio, st in detalle:
+                cur.execute("""INSERT INTO factura_detalle 
+                               (id_factura, id_producto, cantidad, precio_unitario, subtotal)
+                               VALUES (%s,%s,%s,%s,%s)""",
+                            (id_factura, pid, cantidad, precio, st))
+                # Actualizar stock
+                cur.execute("UPDATE productos SET cantidad = cantidad - %s WHERE id_producto=%s", (cantidad, pid))
+
+            conn.commit()
+            flash('Factura registrada correctamente ✅', 'success')
+            return redirect(url_for('listar_facturas'))
+
+        except Exception as e:
+            conn.rollback()
+            flash(f'Error al registrar la factura: {str(e)}', 'danger')
+
+    # GET: mostrar formulario
+    cur.execute("SELECT * FROM clientes ORDER BY nombre")
+    clientes = cur.fetchall()
+    cur.execute("SELECT * FROM productos ORDER BY nombre")
+    productos = cur.fetchall()
+    cur.close()
+    cerrar_conexion(conn)
+    return render_template('facturas/form.html', clientes=clientes, productos=productos)
+
+@app.route('/facturas/<int:fid>/eliminar', methods=['POST'])
+@login_required
+def eliminar_factura(fid):
+    conn = conexion()
+    cur = conn.cursor()
+    try:
+        # Primero eliminar detalle
+        cur.execute("DELETE FROM factura_detalle WHERE id_factura = %s", (fid,))
+        # Luego eliminar la factura
+        cur.execute("DELETE FROM facturas WHERE id_factura = %s", (fid,))
+        if cur.rowcount > 0:
+            conn.commit()
+            flash(f'Factura #{fid} eliminada correctamente ✅', 'success')
+        else:
+            flash('Factura no encontrada ⚠️', 'warning')
+    except Exception as e:
+        conn.rollback()
+        flash(f'Error al eliminar factura: {str(e)}', 'danger')
+    finally:
+        cur.close()
+        cerrar_conexion(conn)
+
+    return redirect(url_for('listar_facturas'))
+
+
+# Ver detalle de factura
+@app.route('/facturas/<int:fid>')
+@login_required
+def detalle_factura(fid):
+    conn = conexion()
+    cur = conn.cursor(dictionary=True)
+    try:
+        cur.execute("""
+            SELECT f.*, c.nombre, c.apellido, c.email 
+            FROM facturas f
+            JOIN clientes c ON f.id_cliente = c.id_cliente
+            WHERE f.id_factura=%s
+        """, (fid,))
+        factura = cur.fetchone()
+
+        cur.execute("""
+            SELECT d.*, p.nombre 
+            FROM factura_detalle d
+            JOIN productos p ON d.id_producto = p.id_producto
+            WHERE d.id_factura=%s
+        """, (fid,))
+        detalle = cur.fetchall()
+
+        return render_template('facturas/detalle.html', factura=factura, detalle=detalle)
+    finally:
+        cur.close()
+        cerrar_conexion(conn)
+
 # ========================
 #  MAIN
 # ========================

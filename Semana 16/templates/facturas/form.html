@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Nueva Venta / Factura{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto bg-white shadow-md rounded-lg p-8">
+  <!-- Encabezado -->
+  <div class="flex items-center gap-3 mb-6">
+    <i class="fas fa-file-invoice-dollar text-blue-600 text-2xl"></i>
+    <h2 class="text-2xl font-bold text-gray-800">Nueva Factura</h2>
+  </div>
+
+  <!-- Formulario -->
+  <form method="post" id="factura-form" class="space-y-6">
+    <!-- CSRF Token -->
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <!-- Selección de Cliente -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700">Cliente</label>
+      <select name="id_cliente" required
+              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+        <option value="">Seleccione un cliente</option>
+        {% for c in clientes %}
+          <option value="{{ c.id_cliente }}">{{ c.nombre }} {{ c.apellido }} - {{ c.email }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Tabla de Productos -->
+    <div>
+      <h3 class="text-lg font-semibold text-gray-800 mb-2">Productos</h3>
+      <table class="w-full border-collapse" id="tabla-productos">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="px-3 py-2 border">Producto</th>
+            <th class="px-3 py-2 border">Precio</th>
+            <th class="px-3 py-2 border">Cantidad</th>
+            <th class="px-3 py-2 border">Subtotal</th>
+            <th class="px-3 py-2 border text-center">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Se agregan dinámicamente con JS -->
+        </tbody>
+      </table>
+      <button type="button" id="btn-agregar"
+              class="mt-3 inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition">
+        <i class="fas fa-plus"></i> Agregar producto
+      </button>
+    </div>
+
+    <!-- Totales -->
+    <div class="flex justify-end mt-6">
+      <div class="w-64 space-y-2 text-right">
+        <p>Subtotal: <span id="subtotal" class="font-semibold">$0.00</span></p>
+        <p>IVA (12%): <span id="iva" class="font-semibold">$0.00</span></p>
+        <p class="text-xl font-bold">Total: <span id="total">$0.00</span></p>
+      </div>
+    </div>
+
+    <!-- Botones -->
+    <div class="flex justify-end space-x-3 pt-4">
+      <a href="{{ url_for('listar_facturas') }}"
+         class="inline-flex items-center gap-2 bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 transition">
+        <i class="fas fa-times"></i> Cancelar
+      </a>
+      <button type="submit"
+              class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">
+        <i class="fas fa-save"></i> Guardar Factura
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Script para manejar productos dinámicamente -->
+<script>
+  const productosDisponibles = {{ productos | tojson }};
+  const tbody = document.querySelector("#tabla-productos tbody");
+  const subtotalEl = document.getElementById("subtotal");
+  const ivaEl = document.getElementById("iva");
+  const totalEl = document.getElementById("total");
+
+  document.getElementById("btn-agregar").addEventListener("click", () => {
+    let row = document.createElement("tr");
+
+    row.innerHTML = `
+      <td class="border px-2 py-1">
+        <select name="productos[]" class="w-full border rounded px-2 py-1">
+          ${productosDisponibles.map(p => `<option value="${p.id_producto}" data-precio="${p.precio}">${p.nombre}</option>`).join("")}
+        </select>
+      </td>
+      <td class="border px-2 py-1 precio">$0.00</td>
+      <td class="border px-2 py-1">
+        <input type="number" name="cantidades[]" value="1" min="1" class="w-20 border rounded px-2 py-1">
+      </td>
+      <td class="border px-2 py-1 subtotal">$0.00</td>
+      <td class="border px-2 py-1 text-center">
+        <button type="button" class="text-red-600 hover:text-red-800 btn-eliminar"><i class="fas fa-trash"></i></button>
+      </td>
+    `;
+
+    tbody.appendChild(row);
+    actualizarTotales();
+  });
+
+  // Delegación de eventos
+  tbody.addEventListener("input", (e) => {
+    if (e.target.tagName === "SELECT" || e.target.tagName === "INPUT") {
+      actualizarTotales();
+    }
+  });
+
+  tbody.addEventListener("click", (e) => {
+    if (e.target.closest(".btn-eliminar")) {
+      e.target.closest("tr").remove();
+      actualizarTotales();
+    }
+  });
+
+  function actualizarTotales() {
+    let subtotal = 0;
+    tbody.querySelectorAll("tr").forEach(tr => {
+      let select = tr.querySelector("select");
+      let precio = parseFloat(select.selectedOptions[0].dataset.precio);
+      let cantidad = parseInt(tr.querySelector("input").value);
+      let st = precio * cantidad;
+      tr.querySelector(".precio").textContent = `$${precio.toFixed(2)}`;
+      tr.querySelector(".subtotal").textContent = `$${st.toFixed(2)}`;
+      subtotal += st;
+    });
+
+    let iva = subtotal * 0.12;
+    let total = subtotal + iva;
+
+    subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
+    ivaEl.textContent = `$${iva.toFixed(2)}`;
+    totalEl.textContent = `$${total.toFixed(2)}`;
+  }
+</script>
+{% endblock %}

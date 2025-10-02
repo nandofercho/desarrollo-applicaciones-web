@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Facturas{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto bg-white shadow-md rounded-lg p-6">
+  <!-- Encabezado -->
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+      <i class="fas fa-file-invoice-dollar text-blue-600"></i> Facturas
+    </h1>
+    <a href="{{ url_for('crear_factura') }}"
+       class="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition">
+      <i class="fas fa-plus"></i> Nueva Factura
+    </a>
+  </div>
+
+  <!-- Tabla de facturas -->
+  {% if facturas %}
+  <div class="overflow-x-auto">
+    <table class="min-w-full border border-gray-200 rounded-lg">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="px-4 py-2 border-b text-left text-gray-600">#</th>
+          <th class="px-4 py-2 border-b text-left text-gray-600">Cliente</th>
+          <th class="px-4 py-2 border-b text-left text-gray-600">Fecha</th>
+          <th class="px-4 py-2 border-b text-right text-gray-600">Subtotal</th>
+          <th class="px-4 py-2 border-b text-right text-gray-600">IVA</th>
+          <th class="px-4 py-2 border-b text-right text-gray-600">Total</th>
+          <th class="px-4 py-2 border-b text-center text-gray-600">Estado</th>
+          <th class="px-4 py-2 border-b text-center text-gray-600">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in facturas %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-4 py-2 border-b">{{ f.id_factura }}</td>
+          <td class="px-4 py-2 border-b">{{ f.nombre }} {{ f.apellido }}</td>
+          <td class="px-4 py-2 border-b">{{ f.fecha.strftime('%Y-%m-%d %H:%M') }}</td>
+          <td class="px-4 py-2 border-b text-right">${{ '%.2f'|format(f.subtotal) }}</td>
+          <td class="px-4 py-2 border-b text-right">${{ '%.2f'|format(f.iva) }}</td>
+          <td class="px-4 py-2 border-b text-right font-bold">${{ '%.2f'|format(f.total) }}</td>
+          <td class="px-4 py-2 border-b text-center">
+            {% if f.estado == 'PAGADA' %}
+              <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-700">Pagada</span>
+            {% elif f.estado == 'PENDIENTE' %}
+              <span class="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-700">Pendiente</span>
+            {% else %}
+              <span class="px-2 py-1 text-xs rounded bg-red-100 text-red-700">Anulada</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-2 border-b text-center space-x-2">
+            <!-- Ver Detalle -->
+            <a href="{{ url_for('detalle_factura', fid=f.id_factura) }}"
+               class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition"
+               title="Ver Detalle">
+              <i class="fas fa-eye"></i>
+            </a>
+            <!-- Eliminar -->
+            <form method="post" action="{{ url_for('eliminar_factura', fid=f.id_factura) }}" class="inline"
+                  onsubmit="return confirm('¿Eliminar factura #{{ f.id_factura }}?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit"
+                      class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-red-600 text-white hover:bg-red-700 transition"
+                      title="Eliminar">
+                <i class="fas fa-trash"></i>
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-gray-500 text-center mt-6">No hay facturas registradas.</p>
+  {% endif %}
+</div>
+{% endblock %}
